@@ -1,0 +1,4 @@
+; OM File Header - Saved 2013/01/11 23:12:19
+; (6.050102 :patc (om-make-point 118 10) (om-make-point 316 339) (om-make-point 431 353) "" 183 0 "2013/01/02 23:53:36" "2013/01/03 0:14:59")
+; End File Header
+(in-package :om)(load-lib-for (quote nil))(setf *om-current-persistent* (om-load-patch1 "function behaviour" (quote ((om-load-boxcall (quote genfun) "OM-RANDOM" (quote om-random) (quote ((om-load-inputfun (quote input-funbox) "min" "LOW" 0) (om-load-inputfun (quote input-funbox) "max" "HIGH" 10))) (om-make-point 66 102) nil (list 8) nil nil 1))) (quote nil) nil 6.050102))
