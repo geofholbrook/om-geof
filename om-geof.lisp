@@ -1,8 +1,9 @@
 (in-package :om)
 
-;; create necessary packages if it hasn't been already (otherwise some files will not load, notably geof.libmods)
+;; create necessary packages if necessary (otherwise some files will not load, notably geof.libmods)
 
-(require-library "om4csound")
+;; (require-library "om4csound")
+;; (require-library "om_soundbank")
 
 (unless (find-package "OM-AURO") 
   (defpackage "OM-AURO" 
@@ -13,9 +14,13 @@
     (:nicknames "OLEP")
     (:use "COMMON-LISP" "CL-USER" "OM-API" "LISPWORKS" "HCL" "OM-LISP" "OM")))
 
+(unless (find-package "om_soundbank")
+  (defpackage sbk 
+    (:use "COMMON-LISP" "OpenMusic" "OM" "OA" "CL-USER")))
+
 ;;;;;
 
-(require-library "om_soundbank")
+
 
 
 (export '(mki))
