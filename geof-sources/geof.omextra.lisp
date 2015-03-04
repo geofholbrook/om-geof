@@ -25,6 +25,20 @@
                                                     arg))))))
 
 ;;;;;;;;;;;;;;;;
+;;; for testing a workspace against library changes
+;;; open all patches, lisp functions, and i guess maquettes, in the workspace
+;;; could get heavy
+
+;;; usage: (open-everything *current-workspace*)
+
+(defmethod open-everything ((self ompersistantfolder))
+  (mapcar 'open-everything (elements self)))
+
+(defmethod open-everything ((self ompatch))
+  (openobjecteditor self))
+ 
+
+;;;;;;;;;;;;;;;;
 
 
 (defmethod snap-ratio-to-divisor ((ratio number) divisor &key dir)
