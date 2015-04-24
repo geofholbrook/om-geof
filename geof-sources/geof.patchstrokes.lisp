@@ -9,6 +9,7 @@
   (let ((actives (get-actives self)))
     (case char
       (#\E (om-encapsulate self actives))
+      (#\U (om-unencapsulate self actives))
       (#\L (om-funnel self actives))
       (#\Y (om-align self actives)
            (make-move-after self actives))
@@ -34,6 +35,11 @@
                  (or (not (subtypep (type-of f) 'omboxframe))
                      (active-mode f)))
              (om-subviews self)))
+
+(defmethod get-all-boxframes ((self relationPanel))
+  (remove-if-not #'(lambda (f)
+                     (subtypep (type-of f) 'omboxframe))
+                 (om-subviews self)))
            
 
 (defmethod normalize-positions ((self ompatch))   ;;; could be for any relational-something-or-other?
@@ -140,7 +146,27 @@
         active))
 
 (defmethod om-unencapsulate ((self patchPanel) (active t))
-  (modify-patch self))
+  (modify-patch self)
+
+  ;get list of copies
+
+  (let ((inside-boxes (print (get-all-boxframes active)))))
+
+  
+
+
+
+  ;get average position
+
+  ;find threshold connections
+
+  ;place copies in parent patch
+
+  ;make internal connections
+  ;make threshold connections
+
+  ;delete patcher
+)
 
 
 
