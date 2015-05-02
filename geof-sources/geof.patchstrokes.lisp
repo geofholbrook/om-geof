@@ -36,10 +36,7 @@
                      (active-mode f)))
              (om-subviews self)))
 
-(defmethod get-all-boxframes ((self relationPanel))
-  (remove-if-not #'(lambda (f)
-                     (subtypep (type-of f) 'omboxframe))
-                 (om-subviews self)))
+
            
 
 (defmethod normalize-positions ((self ompatch))   ;;; could be for any relational-something-or-other?
@@ -53,6 +50,22 @@
           (setf (frame-position box)
                 (om-make-point (+ (- (om-point-h (frame-position box)) minx) 50)
                                (+ (- (om-point-v (frame-position box)) miny) 50))))))
+
+
+(defmethod center-positions-around ((self ompatch) boxes position)
+  (let ((average-pos (loop for box in boxes
+                           sum (om-point-h (frame-position box)) into hsum
+                           sum (om-point-v (frame-position box)) into vsum
+                           finally return (om-make-point (floor (/ hsum (length boxes)))
+                                                         (floor (/ vsum (length boxes)))))))
+    (loop for box in boxes
+          do (setf (frame-position box)
+                   (om-add-points (om-subtract-points (frame-position box)
+                                                      average-pos)
+                                  position)))))
+          
+                           
+                           
 
 
 (defmethod shrink-patch-window ((self ompatch))   ;;; could be for any relational-something-or-other?
@@ -79,8 +92,6 @@
 
 
 (defmethod om-encapsulate ((self patchPanel) actives)
-; yes, it's ironic that this code for encapsulation is totally sprawling ...
-  
   (modify-patch self)
 
   (let* ((inactives (get-inactives self))
@@ -145,33 +156,99 @@
   (mapc #'(lambda (a) (om-unencapsulate self a))
         active))
 
-(defmethod om-unencapsulate ((self patchPanel) (active t))
+(defmethod om-unencapsulate ((self patchPaneL) (active t)) nil)
+
+(defmethod om-unencapsulate ((self patchPanel) (active patchboxframe))
   (modify-patch self)
 
-  ;get list of copies
-
-  (let ((inside-boxes (print (get-all-boxframes active)))))
-
+  (load-patch (reference (object active)))   ;; make sure it's loaded
   
+  (let* ((sub-patch (reference (object active)))
+         (parent-patch (object self))
+         
+         ;(non-inout-boxes (remove-if #'is-inout-p (boxes sub-patch)))
 
+         (copies (loop for box in (boxes sub-patch)
+                       collect (eval (omng-copy box))))
 
+         (inside-connections (mk-connection-list (remove-if #'is-inout-p (boxes sub-patch))))
 
-  ;get average position
+         inlet-alist
+         outlet-alist
 
-  ;find threshold connections
+         (new-box-counter 0))
 
-  ;place copies in parent patch
+    (loop for box in (boxes sub-patch)
+          for k from 0
+          if (equalp (type-of box) 'omin) do (push (list k (indice box)) inlet-alist)
+          if (equalp (type-of box) 'omout) do (push (list k (indice box)) outlet-alist))
 
-  ;make internal connections
-  ;make threshold connections
+    ;(print inlet-alist)
+    ;(print outlet-alist)
 
-  ;delete patcher
-)
-
-
-
-        
+    (loop for box in (reverse copies)  
+          unless (is-inout-p box)
+          do 
+          (omg-add-element self (make-frame-from-callobj box))
+          (incf new-box-counter))
   
+    (remk-connections copies (mk-connection-list (boxes sub-patch)))
+
+
+    (when t
+      (let ((parent-connections (mk-connection-list (boxes parent-patch)))
+            (sub-patch-position (position (object active) (boxes parent-patch))))
+
+        (loop for conn in (mk-connection-list (boxes sub-patch))
+              for inlet-number = (assoc (first conn) inlet-alist)    ; source-position
+              for outlet-number = (assoc (third conn) outlet-alist)   ; target-position
+          
+              do 
+              (when inlet-number
+                (let ((outer-connection (connected? (nth (second inlet-number) 
+                                                         (inputs (object active))))))
+                  (when outer-connection
+                    (omNG-connect (first outer-connection)
+                                  (second outer-connection)
+                                  (nth (third conn) copies)
+                                  (fourth conn)
+                                  (fifth conn)
+                                  (sixth conn)))))
+
+              (when outlet-number
+                (loop for pc in parent-connections
+                      do
+                      (when (and (= (first pc) sub-patch-position)
+                                 (= (second pc) (second outlet-number)))
+                        (omNG-connect (nth (first conn) copies)
+                                      (second conn)
+                                      (nth (third pc) (boxes parent-patch))
+                                      (fourth pc)
+                                      (fifth pc)
+                                      (sixth pc))))))))                       
+
+    (center-positions-around (object self) copies (om-add-points (frame-position (object active))
+                                                                 (om-make-point -25 50)))
+
+    (omg-remove-element self active)
+
+    (mapc #'(lambda (copy)
+              (when (frames copy)
+                (redraw-frame (first (frames copy)))))
+          copies)
+))
+
+
+
+
+
+
+(defmethod is-inout-p ((self t)) nil)
+(defmethod is-inout-p ((self omin)) t)
+(defmethod is-inout-p ((self omout)) t)
+
+
+
 
 
 (defun mk-bridge-list (sources destinations)
@@ -218,7 +295,7 @@
                                                                     (if (= index 1)
                                                                         ""
                                                                       (string+ " " (prin1-to-string index)))) 
-                                                           index
+                                                           (1- index)
                                                            (om-make-point (+ (om-point-h (om-view-position source)) (* (second conn) 35))
                                                                           (om-point-v (om-view-position source))))))
                           (omng-add-element patch newin)
@@ -255,7 +332,7 @@
                                                (if (= index 1)
                                                    ""
                                                  (string+ " " (prin1-to-string index)))) 
-                                      index
+                                      (1- index)
                                       (om-make-point (+ (om-point-h (om-view-position destination)) (* (fourth conn) 35))
                                                      (om-point-v (om-view-position destination))))
 
