@@ -161,77 +161,71 @@
 (defmethod om-unencapsulate ((self patchPanel) (active patchboxframe))
   (modify-patch self)
 
-  (load-patch (reference (object active)))   ;; make sure it's loaded
+  (load-patch (reference (object active)))   ;; make sure the subpatch is loaded
   
   (let* ((sub-patch (reference (object active)))
          (parent-patch (object self))
-         
-         ;(non-inout-boxes (remove-if #'is-inout-p (boxes sub-patch)))
 
+         ;;; make copies of boxes inside the subpatch
          (copies (loop for box in (boxes sub-patch)
                        collect (eval (omng-copy box))))
 
-         (inside-connections (mk-connection-list (remove-if #'is-inout-p (boxes sub-patch))))
-
          inlet-alist
-         outlet-alist
+         outlet-alist)
 
-         (new-box-counter 0))
-
+    ; build list of inlet and outlet list positions in the subpatch
     (loop for box in (boxes sub-patch)
           for k from 0
           if (equalp (type-of box) 'omin) do (push (list k (indice box)) inlet-alist)
           if (equalp (type-of box) 'omout) do (push (list k (indice box)) outlet-alist))
 
-    ;(print inlet-alist)
-    ;(print outlet-alist)
-
+    ; add the copies of all boxes except inlets and outlets into the parent patch, preserving the order (necessary?)
     (loop for box in (reverse copies)  
           unless (is-inout-p box)
-          do 
-          (omg-add-element self (make-frame-from-callobj box))
-          (incf new-box-counter))
+          do (omg-add-element self (make-frame-from-callobj box)))
   
+    ; make internal (non threshold) connections
     (remk-connections copies (mk-connection-list (boxes sub-patch)))
 
+    ; make threshold connections
+    (let ((parent-connections (mk-connection-list (boxes parent-patch)))
+          (sub-patch-position (position (object active) (boxes parent-patch))))
 
-    (when t
-      (let ((parent-connections (mk-connection-list (boxes parent-patch)))
-            (sub-patch-position (position (object active) (boxes parent-patch))))
-
-        (loop for conn in (mk-connection-list (boxes sub-patch))
-              for inlet-number = (assoc (first conn) inlet-alist)    ; source-position
-              for outlet-number = (assoc (third conn) outlet-alist)   ; target-position
+      (loop for conn in (mk-connection-list (boxes sub-patch))
+            for inlet-number = (assoc (first conn) inlet-alist)    ; source-position
+            for outlet-number = (assoc (third conn) outlet-alist)   ; target-position
           
-              do 
-              (when inlet-number
-                (let ((outer-connection (connected? (nth (second inlet-number) 
-                                                         (inputs (object active))))))
-                  (when outer-connection
-                    (omNG-connect (first outer-connection)
-                                  (second outer-connection)
-                                  (nth (third conn) copies)
-                                  (fourth conn)
-                                  (fifth conn)
-                                  (sixth conn)))))
+            do 
+            (when inlet-number
+              (let ((outer-connection (connected? (nth (second inlet-number) 
+                                                       (inputs (object active))))))
+                (when outer-connection
+                  (omNG-connect (first outer-connection)
+                                (second outer-connection)
+                                (nth (third conn) copies)
+                                (fourth conn)
+                                (fifth conn)
+                                (sixth conn)))))
 
-              (when outlet-number
-                (loop for pc in parent-connections
-                      do
-                      (when (and (= (first pc) sub-patch-position)
-                                 (= (second pc) (second outlet-number)))
-                        (omNG-connect (nth (first conn) copies)
-                                      (second conn)
-                                      (nth (third pc) (boxes parent-patch))
-                                      (fourth pc)
-                                      (fifth pc)
-                                      (sixth pc))))))))                       
+            (when outlet-number
+              (loop for pc in parent-connections
+                    do
+                    (when (and (= (first pc) sub-patch-position)
+                               (= (second pc) (second outlet-number)))
+                      (omNG-connect (nth (first conn) copies)
+                                    (second conn)
+                                    (nth (third pc) (boxes parent-patch))
+                                    (fourth pc)
+                                    (fifth pc)
+                                    (sixth pc)))))))                       
 
+    ;reposition new boxes
     (center-positions-around (object self) copies (om-add-points (frame-position (object active))
                                                                  (om-make-point -25 50)))
-
+    ;remove the subpatcher
     (omg-remove-element self active)
 
+    ;draw the new connections
     (mapc #'(lambda (copy)
               (when (frames copy)
                 (redraw-frame (first (frames copy)))))
