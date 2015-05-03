@@ -10,7 +10,7 @@
 
 ;;; (redefining om function, works in OM 6.8)
 
-(when (> *om-version* 6.090014F0)
+(when (> *om-version* 6.0901)
   (dialog-message "new version; check gray background fix in geof.graphics.lisp"))
 
 (defmethod draw-before-box ((self omboxframe))
