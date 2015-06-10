@@ -53,7 +53,7 @@
                                    for k from (+ (last-elem times-1) delta) by delta
                                    collect k))
                    times-1)))
-    (easy-csd (m::a_diskin2 (m::p4 (m::get_n_channels (first sounds))) m::p5)
+    (easy-csd (m::a_diskin2 (m::p4 (m::get_n_channels (first sounds))) (m::p5))
               times
               (mapcar 'sound-dur sounds)
               sounds
