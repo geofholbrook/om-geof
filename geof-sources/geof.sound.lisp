@@ -42,7 +42,7 @@
 
 
 
-(defmethod! place-sounds ((sounds list) (times-1 list))
+(defmethod! place-sounds ((sounds list) (times-1 list) &optional detunes)
 ;;; times-1 can be a delta time, or a list of times
 ;;; if the list of times is to short then succeeding times are generated
   :icon 749
@@ -53,10 +53,13 @@
                                    for k from (+ (last-elem times-1) delta) by delta
                                    collect k))
                    times-1)))
-    (easy-csd (m::a_diskin2 (m::p4 (m::get_n_channels (first sounds))) 1)
+    (easy-csd (m::a_diskin2 (m::p4 (m::get_n_channels (first sounds))) m::p5)
               times
               (mapcar 'sound-dur sounds)
-              sounds)))
+              sounds
+              (if detunes
+                  (mapcar #'(lambda (d) (expt 2 (/ d 1200))) detunes)
+                1))))
 
 (defmethod! loop-sound ((sound t) (num number))
  :icon 749
@@ -614,7 +617,7 @@
 
 (defmethod! om-sampler ((obj tonal-object) (sound-lists list) &key (adsr '(.0001 0 1 .1)))
    :icon 749
-   (om-sampler (objfromobjs obj 'chord-seq) sound-lists :adsr adsr))
+   (om-sampler (objfromobjs obj (mki 'chord-seq)) sound-lists :adsr adsr))
 
 
 ;;;;;;;

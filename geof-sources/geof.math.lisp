@@ -3,9 +3,9 @@
 
 ;;; OM-GEOF --- MATH FUNCTIONS
 
-(export '(rrnd
-          sign-of
-          withinp))
+;(export '(rrnd
+;          sign-of
+;          withinp))
           
 
 (defun rrnd (lower-limit &optional upper-limit)

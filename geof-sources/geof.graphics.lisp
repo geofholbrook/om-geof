@@ -10,8 +10,8 @@
 
 ;;; (redefining om function, works in OM 6.8)
 
-(when (> *om-version* 6.0901)
-  (dialog-message "new version; check gray background fix in geof.graphics.lisp"))
+;(when (> *om-version* 6.0901)
+;  (dialog-message "new version; check gray background fix in geof.graphics.lisp"))
 
 (defmethod draw-before-box ((self omboxframe))
   (when (frame-size (object self))
@@ -20,7 +20,6 @@
                                 (om-make-color 0.7 0.7 0.7)
                               (om-make-color 0.87 0.87 0.87))        ;;; orig 0.921 0.921 0.921
         (om-fill-rect 0 8 (w self) (- (h self) 17))))))
-
 
 
 ;;; macros stolen from enved
