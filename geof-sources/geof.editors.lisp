@@ -2,24 +2,7 @@
 
 
 
-;;;===========================
-;;; key shortcuts 'p' and 's' for list editor, to play score-objects and sounds
-;;; without opening a window
 
-(defmethod selected-frame  ((editor listeditor))
-  (find-if #'active-mode (om-subviews (panel editor))))
-
-(defmethod instance-icon-frame-p ((obj t)) nil)
-(defmethod instance-icon-frame-p ((obj instance-icon-frame)) t)
-
-
-(defmethod handle-key-event ((self listeditor) char)
-  (case char
-    (#\p (let ((f (selected-frame self)))
-           (if (instance-icon-frame-p f)
-               (play (instance (object f)))
-             (om-beep))))
-    (#\s (stop-player!))))
 
 ;;==============================
 

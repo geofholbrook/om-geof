@@ -70,9 +70,9 @@
                      collect time)))
 
 
-(defmethod! place-sounds ((sounds list) (times-1 number))
+(defmethod! place-sounds ((sounds list) (times-1 number) &optional detunes)
   :icon 749  
-  (place-sounds sounds `(0 ,times-1)))
+  (place-sounds sounds `(0 ,times-1) detunes))
   
 
 
