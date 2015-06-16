@@ -583,36 +583,42 @@
 ;;; time is in ms
 
 ;;; multitimbral version: sound-list will be chosen by channel
-(defmethod! om-sampler ((obj chord-seq) (sound-lists list) &key (adsr '(.0001 0 1 .1)))
+(defmethod! om-sampler ((obj chord-seq) (sound-lists-1 list) &key (adsr '(.0001 0 1 .1)))
   :icon 749
-  (print "finding samples and transpositions...")
-  (let* ((mf-info (chord-seq->mf-info-MC obj))
-         (len (length mf-info))
-         (sounds-speeds 
-          (mat-trans (remove-if #'null
-                                (loop for mf-note in mf-info
-                                      for k from 0
-                                      if (= (mod k 100) 0)
-                                      do (print (string+ "note " 
-                                                         (prin1-to-string k)
-                                                         " of "
-                                                         (prin1-to-string len)))
+
+  (let ((sound-lists
+         (if (atom (car sound-lists-1)) ;;; assum it is a directory list
+             (loop for dir in sound-lists-1
+                   collect (om-directory dir)))))
+
+    (print "finding samples and transpositions...")
+    (let* ((mf-info (chord-seq->mf-info-MC obj))
+           (len (length mf-info))
+           (sounds-speeds 
+            (mat-trans (remove-if #'null
+                                  (loop for mf-note in mf-info
+                                        for k from 0
+                                        if (= (mod k 100) 0)
+                                        do (print (string+ "note " 
+                                                           (prin1-to-string k)
+                                                           " of "
+                                                           (prin1-to-string len)))
                         
-                                      collect (choose-sound-speed (first mf-note)
-                                                                  (fourth mf-note)
-                                                                  (fifth mf-note)
-                                                                  sound-lists))))))
+                                        collect (choose-sound-speed (first mf-note)
+                                                                    (fourth mf-note)
+                                                                    (fifth mf-note)
+                                                                    sound-lists))))))
                                 
-    (easy-csd (om* (om* (m::a_diskin2 (m::p4) (m::p5))
-                        (m::p6))
-                   (apply #'m::a_adsr adsr))
-              obj   ;;
-              obj   ;; om4csound translates cseq into onsets and durations
+      (easy-csd (om* (om* (m::a_diskin2 (m::p4) (m::p5))
+                          (m::p6))
+                     (apply #'m::a_adsr adsr))
+                obj   ;;
+                obj   ;; om4csound translates cseq into onsets and durations
             
-              (first sounds-speeds)
-              (second sounds-speeds)
-              (mapcar #'(lambda (n) (velocity->amp (fourth n)))
-                      mf-info))))
+                (first sounds-speeds)
+                (second sounds-speeds)
+                (mapcar #'(lambda (n) (velocity->amp (fourth n)))
+                        mf-info)))))
 
 
 (defmethod! om-sampler ((obj tonal-object) (sound-lists list) &key (adsr '(.0001 0 1 .1)))
