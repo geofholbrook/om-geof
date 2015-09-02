@@ -30,21 +30,6 @@
            (<= num (+ lo tolerance)))))
 
 
-(defmethod om-clip ((val number) (min number) &optional max)
-  (if (and min (< val min))
-      min
-    (if (and max (> val max))
-        max
-      val)))
-
-(defmethod om-clip ((val number) (min list) &optional max)
-  (om-clip val (first min) (second min)))
-
-(defmethod om-clip ((val list) (min t) &optional max)
-  (mapcar #'(lambda (v) 
-              (om-clip v min max))
-          val))
-
 
 ; old function, for compat
 (defun clip (val &optional (min 0.0) (max 1.0))
