@@ -187,8 +187,8 @@
 
    (defun run-lilypond (path)
      (om-cmd-line (string+ "/Applications/LilyPond.app/Contents/Resources/bin/lilypond --png -o " 
-                           (om-path2cmdpath path) " "
-                           (om-path2cmdpath path)))
+                           "\"" (directory-namestring path) "\" \""
+                           (om-path2cmdpath path) "\""))
 
      (om-put-path-extension path "png"))
 
